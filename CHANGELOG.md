@@ -1,6 +1,6 @@
 hucksh changelog
 
-# 2024-02-21 maybe - 2nd release
+# 2024-02-29 - 2nd release
 
 ## Before you run
 
