@@ -1,6 +1,6 @@
-hucksh changelog
+# hucksh changelog
 
-# 2024-02-29 - 2nd release
+# 2024-03-01 - 2nd release
 
 ## Before you run
 
@@ -122,5 +122,9 @@ I copied all my Notion pages to huckridge.com. See https://huckridge.com/hucksh/
   command has run and been added to the tab history, and it looks like it has
   been, but it really hasn't. See the comment on reset-tab-counts in huckshrc
   for more details. This will be fixed in a future release. 
+* Use "fyne" (https://github.com/fyne-io/fyne/tree/master/cmd/fyne) to package
+  Windows version (hucksh.exe), which embeds the hucksh
+  icon in the .exe, which is nice. Uses a locally-modified version of fyne
+  that does not use "-H windowsgui".
 
 # 2023-12-07 - Initial release
