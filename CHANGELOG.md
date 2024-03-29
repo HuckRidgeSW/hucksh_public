@@ -1,5 +1,121 @@
 # hucksh changelog
 
+# 2024-03-29 - 3rd release
+
+## Before you run
+
+* As before, backup your database. This version has a minor database update,
+  and while it seems safe to me, I'd hate to be wrong.
+* Please replace the server and client at the same time.
+
+## New Features
+
+### Change terminal emulator libraries
+
+Switch from Darktile (github.com/liamg/darktile) to vt10x
+(github.com/HuckRidgeSW/vt10x, forked from github.com/ActiveState/vt10x).
+
+Related:
+* Improve line-wrapping a lot (see below under "Bug fixes")
+* Show a cursor in the terminal emulator. Not perfect, but way better than it
+  was. I was surprised at how much this improved the perceived usability of
+  interactive programs.
+
+### Make hucksh startable from a file browser, icon, or the Mac Dock
+
+(macOS & Linux only)
+
+Make the hucksh GUI auto-start the server.
+
+You used to have to start the hucksh server at the command line, and then
+start the GUI from a different command line.
+
+Now (on macOS & Linux) you can just click on the hucksh executable in a file
+browser (e.g. on macOS, in the Applications tab of the Finder, or from the
+Dock), and the GUI will auto-start the server. If the GUI exits, the server
+will continue.
+
+(The Windows version still requires that you start it from a shell. I still
+want the GUI to be able to log to the terminal, and to do that, it can't be
+what Windows considers a GUI-only executable. I considered shipping two
+versions, a GUI-only and a command-line version, but at least for the moment
+I'm not doing that. Let me know how you feel about it either way.)
+
+The server runs in "verbose" (`-v`) mode and logs by default to
+`$HOME/.hucksh.server.log`. The GUI also runs in "verbose" mode and logs to
+`$HOME/.hucksh.gui.log`. You can change where they log using the `--slog` and
+`--glog` command-line options (except then you have to run from the
+command-line again).
+
+By default, hucksh appends to logs; if you want it to truncate the file (clear
+the current contents), add `,trunc` to the end of the filename. You can also
+just use `,truc` by itself to use the default logfile, but truncate it first.
+Use `-` (e.g. `--glog -`) to log to stdout.
+
+#### Related config variables set up in the database
+
+Since you can start the GUI just by clicking on it now, you need some way to
+set some options you used to set from the terminal (to wit, the `-v` setting,
+and `$PATH`), so the GUI now reads two settings from the `config` table:
+
+* `client_path` should be set to the same as `$PATH` in your shell
+* `client_verbose` can be true/false (or 1/0 or several other values), and
+  sets whether the GUI should log in verbose mode (or not)
+
+The huckshrc in the distribution file has a function to make these easier to
+set:
+
+```
+# Only run this locally.
+set-config client_path $PATH
+```
+
+## Other changes
+
+* Updated mvdan/sh as of 2024/03/07
+  * More mvdan/sh updates: cancellable reader. "read" in the shell now aborts
+    if you press the INT button. Not merged into master yet, but running in
+    the current version of hucksh.
+* Calculate text width a little more accurately on Windows & Linux, so text
+  should wrap more accurately.
+
+## Bug fixes
+
+* With Darktile, if you printed a very long line (something that filled the
+  whole window, e.g. on macOS if I ran `ps auxww`, the command line of
+  crashpad_handler is 8742 characters long), the tty code would hang and use
+  100% cpu. Changing to vt10x fixed this.
+* If a command printed anything at all (so much as `echo foo`), and then you
+  resized the window to be smaller, the output was considered to take up the
+  entire width of the window, and the trailing spaces would be line-wrapped.
+  Going the other way, so to speak, if you printed a line that was wider than
+  the window and it really did line-wrap, and then you enlarged the window,
+  the line would not be "unwrapped".
+
+  Both of these have been fixed.
+* Display errors (e.g. network errors) correctly across all GUI windows.
+  Before, if you started a second window and then closed the first window and
+  then the network went down, you'd never see the error.
+* When running an interactive program (e.g. Vim), if the server or network
+  crashed, and you kept pressing keys, you'd get errors to the log for every
+  key. Now just throw them away.
+* When you start the GUI, if you say `--address ""`, the GUI opens the "choose
+  connection" window, as if you'd pressed Cmd-Opt-N/Ctrl-Alt-N. On macOS &
+  Linux, it removes the `$HOME/.hucksh.socket.` prefix of all listed sockets,
+  so e.g. if you had `.hucksh.socket`, `.hucksh.socket.host`, and
+  `.hucksh.socket.vm`, you'd see `local`, `host`, and `vm`. This didn't work
+  in Windows, and you'd see e.g. `C:\Users\your_id\.hucksh.socket.host`.
+  That's been fixed.
+* Log using the right logger. Sometimes I used the default logger, which
+  writes to stderr, instead of whatever the rest of the app used.
+* Set the Windows drive letter correctly when opening the Hucksh database, so
+  that e.g. if your database is in `C:\users\your_id\.hucksh.db`, and you were
+  currently in `E:\some\path`, and you started hucksh from there, it can find
+  the db correctly.
+* Fixed a bug (before it's even been released!) in vt10x where tabstops didn't
+  work correctly. Not many programs output tabs, I don't think, but sometimes
+  "ls" does, e.g. when doing output in columns.
+
 # 2024-03-01 - 2nd release
 
 ## Before you run
@@ -42,8 +158,8 @@ I copied all my Notion pages to huckridge.com. See https://huckridge.com/hucksh/
 
 * Ctrl-Shift-Alt-N (open a new window) now works on Linux & Windows.
 * If you pass an explicit empty string ("") as the --address, open the "choose
-  a connection" dialog.
-* In the "choose a connection" window, allow Cmd/Ctrl-Shift-W to close the
+  connection" dialog.
+* In the "choose connection" window, allow Cmd/Ctrl-Shift-W to close the
   window, as well as the Cmd/Ctrl-W that already worked. This makes that
   window more like the regular GUI shell window, which already supports
   Cmd/Ctrl-Shift-W to close the window.
@@ -87,7 +203,7 @@ I copied all my Notion pages to huckridge.com. See https://huckridge.com/hucksh/
 
 * Changed window title text from "HuckSh" to "Hucksh".
 * Introduced a database migration tool internally.
-* Tweaked the "choose a connection" window
+* Tweaked the "choose connection" window
   * added a "choose a connection" label, an inset around the window edge, and
     a small space above the "Rescan" button.
   * Removed the "$HOME/.hucksh.socket" prefix from the displayed list of
@@ -128,3 +244,6 @@ I copied all my Notion pages to huckridge.com. See https://huckridge.com/hucksh/
   that does not use "-H windowsgui".
 
 # 2023-12-07 - Initial release
+
+vim:comments=fb\:-,fb\:*
+
