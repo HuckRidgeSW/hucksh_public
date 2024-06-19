@@ -1,5 +1,93 @@
 # hucksh changelog
 
+# 2024-06-19 - 4th release
+
+## New feature
+
+### Show times
+
+hucksh used to have tooltips that popped up if you hovered the mouse briefly
+over command output. These tooltips showed the time of the output, and the
+time since the previous line (if it was >= 1ms). But they were kind of wonky
+and didn't always go away when you moved the mouse away.
+
+So instead I've removed the tooltips and added a "Toggle Show Times" menu
+option (on macOS) & hotkey (everywhere).
+
+The times are displayed on the right side of the window, and include the time
+since the previous line, if it was >= 1ms.
+
+Example:
+    (cmd:) echo ; date ; sleep 1 ; date ; date ; date ; sleep 2 ; date
+                                                          16:44:57.705, 13ms
+    Mon Jun 17 16:44:57 EDT 2024                                16:44:57.705
+    Mon Jun 17 16:44:58 EDT 2024                        16:44:58.732, 1.027s
+    Mon Jun 17 16:44:58 EDT 2024                          16:44:58.742, 10ms
+    Mon Jun 17 16:44:58 EDT 2024                          16:44:58.754, 11ms
+    Mon Jun 17 16:45:00 EDT 2024                        16:45:00.778, 2.024s
+
+Removing the tooltips and displaying all times for all command output revealed
+a bug (now fixed) in how I recorded output times; see below.
+
+Hotkey:
+macOS: Cmd-Opt-Shift-T, Linux/Windows: Ctrl-Alt-Shift-T
+
+## Other changes
+
+* Built with Go 1.22.1 on all platforms.
+* The "wrap" setting is kept for repeated commands. That is, if you run a
+  command, click "Nowrap", and then press Cmd/Ctrl-R to repeat it, the new
+  command will also be unwrapped. This makes it easier to re-run commands with
+  wide output.
+* Fix a server panic when presented with an unknown color in vt10x/hucksh.go,
+  Color.ToRealColor. For color numbers > 15, use a 6x6x6 palette similar to
+  "web-safe" colors, from the Wikipedia article on `ANSI_escape_codes`.
+* Updated mvdan/sh as of 6/17/24.
+* Redirect stderr to the logfile, so "panic" output goes there.
+* Enhance Home/End/PageUp/PageDown in the directory history ("HIST") tab and
+  the command history search panel to set the selected item to the item at the
+  top or bottom of the screen, as appropriate.
+* Start completion by pressing TAB.
+* Completions are now case-insensitive. So c<tab> will complete the same files
+  as C<tab>.
+* Completions now consider "-" as part of a word. So foo-<tab> invokes
+  completions for foo-*.
+* Updated to newer Gio. They reworked the event framework again. Please let me
+  know if I got focus wrong anywhere, or if any of the hotkeys don't work as
+  expected.
+* Change the "focused command" box from red to blue. The "wrapped line" bars
+  are still red. Commands are drawn a couple of pixels inset so that the focus
+  box and the wrapped line bars don't overlap any more.
+* The "output time" of the first line of output is compared to the program
+  start time when calculating the "time since previous line".
+
+  Before, the time of the first line of output was always considered to be the
+  "origin". But if you "sleep 10 ; echo foo", then the "output time" for "foo"
+  should show as 10s since the command started.
+* In case it matters: Tweaked my build process to use
+  "macosx-version-min=11.0" when compiling on macOS.
+
+## Bug fixes
+
+* Home, End, PgUp, PgDn, and Cmd/Ctrl-Shift-C didn't work in Zoomed or Popout
+  (popped-out?) windows. Now they do.
+* Command output times are now saved correctly in the database.
+
+  Before, if you ran a command, and then hovered the mouse to get the time
+  tooltip, you'd get the right time. But if you bounced hucksh and re-read the
+  command from the database, every line was recorded as when the program
+  ended, not when that line was output.
+
+  This has been fixed.
+
+  Note: Commands are (still) only saved once they finish, they are not
+  streamed to the DB live. If the server crashes while a command is running,
+  its output won't be saved.
+* Fix left/right scrolling in unwrapped command output.
+* Cursor position should be more accurate.
+* Terminal emulation should be more accurate. E.g. running Vim in hucksh seems
+  to work correctly in most cases.
+
 # 2024-03-29 - 3rd release
 
 ## Before you run
@@ -98,7 +186,7 @@ set-config client_path $PATH
   then the network went down, you'd never see the error.
 * When running an interactive program (e.g. Vim), if the server or network
   crashed, and you kept pressing keys, you'd get errors to the log for every
-  key. Now just throw them away.
+  key. Now just throw those keys away.
 * When you start the GUI, if you say `--address ""`, the GUI opens the "choose
   connection" window, as if you'd pressed Cmd-Opt-N/Ctrl-Alt-N. On macOS &
   Linux, it removes the `$HOME/.hucksh.socket.` prefix of all listed sockets,
@@ -237,7 +325,7 @@ I copied all my Notion pages to huckridge.com. See https://huckridge.com/hucksh/
   server, client, and user in an inconsistent state, where the user thinks a
   command has run and been added to the tab history, and it looks like it has
   been, but it really hasn't. See the comment on reset-tab-counts in huckshrc
-  for more details. This will be fixed in a future release. 
+  for more details. This will be fixed in a future release.
 * Use "fyne" (https://github.com/fyne-io/fyne/tree/master/cmd/fyne) to package
   Windows version (hucksh.exe), which embeds the hucksh
   icon in the .exe, which is nice. Uses a locally-modified version of fyne
