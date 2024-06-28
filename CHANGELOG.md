@@ -1,6 +1,34 @@
 # hucksh changelog
 
-# 2024-06-19 - 4th release
+# 2024-06-28 - 5th release; 3.1.1
+
+## New features
+
+Nothing hugely new in this release, except for a .pkg file signed (by me) &
+notarized (by Apple), for macOS users. Not really a "feature" of the app, as
+such.
+
+## Other changes
+
+* Changed to a semver version scheme. Reviewed previous releases and assigned
+  them appropriate semantic version numbers, below in this changelog. Did not
+  update the released tags on Github.
+* Distribute a signed & notarized Apple pkg file in a zip file, instead of an
+  unsigned app in a tarball.
+
+  The pkg file worked on my beta-tester's machine. Please let me know if you
+  run into any problems!
+
+## Bug Fixes
+
+* Make completion work better.
+
+  While working on the pkg file mentioned above, I noticed that e.g. `*pkg`
+  wasn't generating the proper completions; it was as if I was completing on
+  just `pkg`. So I fixed that and several similar bugs (e.g. with `?`, `:`,
+  and other characters).
+
+# 2024-06-19 - 4th release; 3.1.0
 
 ## New feature
 
@@ -88,7 +116,7 @@ macOS: Cmd-Opt-Shift-T, Linux/Windows: Ctrl-Alt-Shift-T
 * Terminal emulation should be more accurate. E.g. running Vim in hucksh seems
   to work correctly in most cases.
 
-# 2024-03-29 - 3rd release
+# 2024-03-29 - 3rd release; 3.0.0
 
 ## Before you run
 
@@ -204,7 +232,7 @@ set-config client_path $PATH
   work correctly. Not many programs output tabs, I don't think, but sometimes
   "ls" does, e.g. when doing output in columns.
 
-# 2024-03-01 - 2nd release
+# 2024-03-01 - 2nd release; 2.0.0
 
 ## Before you run
 
@@ -331,7 +359,7 @@ I copied all my Notion pages to huckridge.com. See https://huckridge.com/hucksh/
   icon in the .exe, which is nice. Uses a locally-modified version of fyne
   that does not use "-H windowsgui".
 
-# 2023-12-07 - Initial release
+# 2023-12-07 - Initial release; 1.0.0
 
 vim:comments=fb\:-,fb\:*
 
