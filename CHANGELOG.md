@@ -1,5 +1,14 @@
 # hucksh changelog
 
+# 2024-07-12 - 3.1.2
+
+## Bug Fixes
+
+Fix a panic on shutdown when installing a license.
+
+"hucksh license" panicked on shutdown after adding the license to the
+database, trying to shut down a gRPC server that it hadn't actually started.
+
 # 2024-06-28 - 5th release; 3.1.1
 
 ## New features
