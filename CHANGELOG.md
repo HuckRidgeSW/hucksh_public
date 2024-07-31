@@ -1,8 +1,71 @@
 # hucksh changelog
 
+# 2024-07-31 - 4.0.0
+
+## Bug fixes (existing users: please read!)
+
+- When creating the database, set the umask to 0177, so that it's not readable
+  by anyone but the owner (i.e. 0600, or -rw-------).
+
+  Please make sure your hucksh database(s) are only readable by you / the
+  people you want to be able to read them.
+
+  You probably want to run this command:
+
+    # Assumes default database name; please change as appropriate.
+    chmod go-rwx ~/.hucksh.db*
+
+  everywhere you run the server. You can do this inside hucksh while the
+  server is running.
+
+  I'd add code to do this for you, but it's possible that you *want* other
+  people or groups to be able to read your database, and while I think that's
+  unlikely, I didn't want to break something like that unexpectedly.
+
+## New features
+
+### Save output of running commands when signaled
+
+The hucksh server saves command output only when the command exits. It now
+also saves it when the server is signaled, e.g. via ^C or "killall". (But not
+"kill -9" of course.)
+
+When signaled, the server waits up to 5s for the save to finish, and then
+exits regardless.
+
+(Be advised that when the host machine is shutting down, it might not wait for
+the server to finish.)
+
+### EULA & Licensing reworked
+
+- You can now agree to the EULA right in the GUI
+- You can include the license text right on the "hucksh license" command line:
+
+  hucksh license -l "{ ... license text ... }"
+- When you set a license, it takes effect immediately; you no longer have to
+  bounce either the server or the client.
+
+## Other changes
+
+- When sending a command to the server, if the connection drops, add a 5s
+  timeout to the reconnection attempt. Otherwise (if the connection drops) the
+  whole GUI hangs.
+- If the connection drops, reset the gRPC retry timer when the GUI regains
+  focus.
+
+  So say the connection drops. You fix it, in a different window. When you
+  switch back to the hucksh GUI, it will immediately attempt to reconnect.
+- Allow closing the "choose a connection" and "choose a session" windows via
+  Cmd-Shift-W (Ctrl-Shift-W on Windows/Linux).
+- Tweak the "hucksh run" output to not include trailing spaces on non-blank
+  lines.
+- On Windows, if you start the GUI and the given server Unix socket address
+  (given via -a/--addr) doesn't exist (whether you left the default or set a
+  value), open the "choose a connection" dialog.
+
 # 2024-07-12 - 3.1.2
 
-## Bug Fixes
+## Bug fixes
 
 Fix a panic on shutdown when installing a license.
 
@@ -28,7 +91,7 @@ such.
   The pkg file worked on my beta-tester's machine. Please let me know if you
   run into any problems!
 
-## Bug Fixes
+## Bug fixes
 
 * Make completion work better.
 
@@ -133,7 +196,7 @@ macOS: Cmd-Opt-Shift-T, Linux/Windows: Ctrl-Alt-Shift-T
   and while it seems safe to me, I'd hate to be wrong.
 * Please replace the server and client at the same time.
 
-## New Features
+## New features
 
 ### Change terminal emulator libraries
 
@@ -248,7 +311,7 @@ set-config client_path $PATH
 Backup your database. The new version has a minor database update, and while
 it seems safe to me, I'd hate to be wrong.
 
-## New Features
+## New features
 
 ### GUI client works on Windows
 
